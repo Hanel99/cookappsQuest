@@ -1,0 +1,19 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using UnityEditor;
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "ResourceData", menuName = "Scriptable Object/ResourceData", order = int.MaxValue)]
+public class ResourceScriptableData : ScriptableObject
+{
+
+    [Header("- Sprite")]
+    public List<Sprite> blockImages = new();
+
+
+    [Header("- Prefabs")]
+    public GameObject blockPrefab;
+
+
+}
