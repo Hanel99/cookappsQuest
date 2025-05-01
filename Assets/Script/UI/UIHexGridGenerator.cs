@@ -3,9 +3,9 @@ using UnityEngine.UI;
 
 public class UIHexGridGenerator : MonoBehaviour
 {
-    public RectTransform hexPrefab;  // 육각형 UI 오브젝트
-    public int columns = 6;
-    public int rows = 5;
+    public RectTransform nodePrefab;  // 노드 프리팹
+    public int columns = 7;
+    public int rows = 6;
     public float radius = 50f;  // 육각형 외접반지름 (픽셀 기준)
 
     void Start()
@@ -25,9 +25,9 @@ public class UIHexGridGenerator : MonoBehaviour
                 if (x % 2 == 1)
                     yPos += yOffset / 2f;  // 홀수 열은 반 칸 아래로
 
-                RectTransform hex = Instantiate(hexPrefab, transform);
+                RectTransform hex = Instantiate(nodePrefab, transform);
                 hex.anchoredPosition = new Vector2(xPos, -yPos);  // UI 좌표 기준으로 y는 음수
-                hex.name = $"Hex_{x}_{y}";
+                hex.name = $"Position_{x}_{y}";
             }
         }
     }

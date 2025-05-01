@@ -4,11 +4,6 @@ using UnityEngine.UI;
 
 public class Block : MonoBehaviour
 {
-    public enum BlockState
-    {
-        Empty,
-    }
-
     public enum BlockType
     {
         Normal,
@@ -17,15 +12,14 @@ public class Block : MonoBehaviour
     }
 
     private Button button;          // 블록 버튼
+    public Image blockImage;      // 블록 이미지
 
-    public int Index;               // Index & ID
-    public Vector3Int point;
-    public BlockState blockState = BlockState.Empty;
-
+    public int index;               // Index & ID
+    public int nodePoint; //해당 블럭이 있는 노드의 인덱스
     public BlockType blockType = BlockType.Normal;
     public Node node;               // 블럭이 있는 노드
 
-    private bool onMerging = false;
+    private bool onMoving = false;
 
 
     public void Awake()
@@ -38,30 +32,28 @@ public class Block : MonoBehaviour
         DOTween.Kill(gameObject);
     }
 
-    public void SetBlockData(int index, int x, int y, int z, BlockState blockState, BlockType type)
+    public void SetBlockData(int index, int nodePoint, BlockType type, BlockColor color)
     {
-        Index = index;
-        point = new Vector3Int(x, y, z);
-        this.blockState = blockState;
+        this.index = index;
+        this.nodePoint = nodePoint;
         blockType = type;
-        node = Board.Instance.GetNode(point);
+        node = Board.Instance.GetNode(nodePoint);
+        blockImage.sprite = ResourceManager.instance.GetBlockImage(color);
     }
 
 
 
     public void ResetBlockData(Block blockData)
     {
-        //블럭 데이터 다시 셋팅. 셔플 등에서 사용할 용도
-
         blockType = blockData.blockType;
-        point = blockData.point;
+        nodePoint = blockData.nodePoint;
     }
 
     public void SetBlockPosition(Transform t, int z)
     {
         transform.position = t.position;
-        if (z == 1 || z == 3)
-            transform.position += Board.Instance.blockDistanceVector;
+        // if (z == 1 || z == 3)
+        // transform.position += Board.Instance.blockDistanceVector;
     }
 
     public void OnClickBlock(bool forceTouch = false)

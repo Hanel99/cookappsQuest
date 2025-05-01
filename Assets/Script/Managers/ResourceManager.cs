@@ -22,7 +22,7 @@ public class ResourceManager : MonoBehaviour
     #region GetSprite
 
 
-    public Sprite GetCardImage(BlockColor color)
+    public Sprite GetBlockImage(BlockColor color)
     {
         Sprite sprite = resourceScriptableData.blockImages.Find(x => x.name.Contains(color.ToString()));
 

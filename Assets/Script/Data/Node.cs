@@ -5,14 +5,12 @@ using UnityEngine;
 
 public enum Direction
 {
-    Upper_UPLEFT = 0,
-    Upper_UPRIGHT = 1,
-    Upper_DOWNLEFT = 2,
-    Upper_DOWNRIGHT = 3,
-    Under_UPLEFT = 4,
-    Under_UPRIGHT = 5,
-    Under_DOWNLEFT = 6,
-    Under_DOWNRIGHT = 7,
+    UP = 0,
+    UPLEFT = 1,
+    UPRIGHT = 2,
+    DOWN = 3,
+    DOWNLEFT = 4,
+    DOWNRIGHT = 5,
 }
 
 [System.Serializable]
@@ -20,10 +18,10 @@ public class Node
 {
     public Block block;     // 해당 노드에 있는 블럭
 
-    public Vector3Int point;                    // NodeMap 좌표 (Key)
-    public Vector3Int?[] linkedNode = null;     // 연결 된 노드
+    public int point;                    // NodeMap 좌표 (Key)
+    public int?[] linkedNode = null;     // 연결 된 노드
 
-    public Node(Vector3Int?[] foundedLinkedNode)
+    public Node(int?[] foundedLinkedNode)
     {
         linkedNode = foundedLinkedNode;
     }
@@ -31,7 +29,7 @@ public class Node
 
     public Node FindTarget(Direction dir)
     {
-        Vector3Int? pt = linkedNode[(int)dir];
+        int? pt = linkedNode[(int)dir];
         if (pt.HasValue)
         {
             return Board.Instance.nodeMap[pt.Value];
