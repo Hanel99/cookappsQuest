@@ -12,5 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e3fa012939fbe248b2cae06287cffad, type: 3}
   m_Name: ResourceData
   m_EditorClassIdentifier: 
-  blockImages: []
+  blockImages:
+  - {fileID: 21300000, guid: 6a6b8fb9caaa75a42a40ce6e711326ad, type: 3}
+  - {fileID: 21300000, guid: 6ff937dbb4003e94db0aaaa9c3448f9c, type: 3}
+  - {fileID: 21300000, guid: 9ec83735088c9094e90f5c095ddb7364, type: 3}
+  - {fileID: 21300000, guid: 5e25169021283f343bc9743b9d521e62, type: 3}
+  - {fileID: 21300000, guid: 318133a33ecb2d84eb75ed8f55ced1d3, type: 3}
+  - {fileID: 21300000, guid: e4a9742dc0d27a840835d1212b8591a4, type: 3}
   blockPrefab: {fileID: 0}
