@@ -3,48 +3,56 @@ using UnityEngine;
 
 public class ObjectPool : MonoBehaviour
 {
-    [Header("Pooling Settings")]
-    [SerializeField] private GameObject blockPrefab;
-    [SerializeField] private int initialSize = 10;
+    public static ObjectPool instance { get; private set; }
 
-    private Queue<GameObject> pool = new Queue<GameObject>();
+
+    [Header("Pooling Settings")]
+    // 풀링할게 블럭밖에 없으니 간단하게...
+    [SerializeField] private Block blockPrefab;
+    [SerializeField] private int initialSize = 40;
+
+    private Queue<Block> blockPool = new Queue<Block>();
 
     private void Awake()
     {
-        // 초기 풀 생성
+        instance = this;
+
         for (int i = 0; i < initialSize; i++)
         {
-            AddObjectToPool();
+            MakeBlock();
         }
     }
 
     // 새 오브젝트 생성 후 풀에 추가
-    private void AddObjectToPool()
+    private void MakeBlock()
     {
-        GameObject obj = Instantiate(blockPrefab, transform);
-        obj.SetActive(false);
-        pool.Enqueue(obj);
+        Block obj = Instantiate(blockPrefab, transform);
+        obj.gameObject.SetActive(false);
+        blockPool.Enqueue(obj);
     }
 
 
+    #region Spawn & Recycle
 
-    // 풀에서 오브젝트 가져오기
-    public GameObject Spawn()
+    public Block Spawn()
     {
-        if (pool.Count == 0)
+        if (blockPool.Count == 0)
         {
-            AddObjectToPool();
+            MakeBlock();
         }
 
-        GameObject obj = pool.Dequeue();
-        obj.SetActive(true);
-        return obj;
+        Block block = blockPool.Dequeue();
+        block.gameObject.SetActive(true);
+        return block;
     }
 
-    // 오브젝트 풀에 반환
-    public void Recycle(GameObject obj)
+    public void Recycle(Block block)
     {
-        obj.SetActive(false);
-        pool.Enqueue(obj);
+        block.gameObject.SetActive(false);
+        blockPool.Enqueue(block);
     }
+
+    #endregion
+
+
 }

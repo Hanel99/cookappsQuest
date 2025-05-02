@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class ResourceManager : MonoBehaviour
@@ -11,11 +8,7 @@ public class ResourceManager : MonoBehaviour
 
     private void Awake()
     {
-        if (instance != null && instance != this)
-            return;
-
         instance = this;
-        DontDestroyOnLoad(this.gameObject);
     }
 
 
@@ -24,7 +17,7 @@ public class ResourceManager : MonoBehaviour
 
     public Sprite GetBlockImage(BlockColor color)
     {
-        Sprite sprite = resourceScriptableData.blockImages.Find(x => x.name.Contains(color.ToString()));
+        Sprite sprite = resourceScriptableData.blockImages[(int)color];
 
         return sprite;
     }
