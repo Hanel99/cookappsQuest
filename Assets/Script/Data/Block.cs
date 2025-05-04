@@ -80,14 +80,8 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         DOTween.Kill(gameObject);
         if (cor != null) StopCoroutine(cor);
 
-
         node.block = null;
-
-        //@@@ 이건 고민좀 해보자. 연쇄작업이 일어나야 함
-        //여기서 할게 아니고 매치가 일어났으면 이동 후 보드에서 전체순회로 확인하는걸로
-        // node.FindNode(Direction.UP)?.block?.CheckMoveable();
-        // node.FindNode(Direction.UPLEFT)?.block?.CheckMoveable();
-        // node.FindNode(Direction.UPRIGHT)?.block?.CheckMoveable();     
+        Board.instance.AddBlockSpawnCount();
         ObjectPool.instance.Recycle(this);
     }
 

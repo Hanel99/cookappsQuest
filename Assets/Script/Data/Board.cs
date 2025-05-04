@@ -40,7 +40,7 @@ public class Board : MonoBehaviour
     private Coroutine blockDropCoroutine = null; // 블럭 드랍 코루틴 
     private float moveSearchDuration = 0.3f; // 다음 블럭 서치 속도
     private int blockSpawnReadyCount = 0; // 블럭 스폰해야 할 카운트. 1 이상이면 update에서 블록을 스폰하려고 시도.
-    public void PlusBlockSpawnCount() => blockSpawnReadyCount++;
+
 
 
 
@@ -67,7 +67,7 @@ public class Board : MonoBehaviour
 
         blockList.Clear();
 
-        //3개 이상 연결된 블럭이 있으면 안됨.
+        //@@@ 3개 이상 연결된 블럭이 있으면 안됨.
 
         foreach (var node in nodeMap)
         {
@@ -75,13 +75,9 @@ public class Board : MonoBehaviour
             {
                 BlockColor color = (BlockColor)UnityEngine.Random.Range(0, (int)BlockColor.Count);
 
-                Block block = SpawnBlock(BlockType.Normal, color, node.Key);
-                // block.node = node.Value;
-                // node.Value.block = block;
+                SpawnBlock(BlockType.Normal, color, node.Key);
             }
         }
-
-
     }
 
 
@@ -107,6 +103,10 @@ public class Board : MonoBehaviour
         }
     }
 
+    public void AddBlockSpawnCount(int count = 1)
+    {
+        blockSpawnReadyCount += count;
+    }
 
 
 
