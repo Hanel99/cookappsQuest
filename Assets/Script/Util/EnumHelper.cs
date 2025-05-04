@@ -31,4 +31,5 @@ public enum Direction
     DOWN = 3,
     DOWNLEFT = 4,
     DOWNRIGHT = 5,
+    ERROR = 6, // 알수 없는 방향
 }

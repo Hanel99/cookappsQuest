@@ -73,4 +73,11 @@ public class Node
 
         return null;
     }
+
+    public void ResetNode(Block block)
+    {
+        this.block = block;
+        block.node = this;
+        block.nodePoint = point;
+    }
 }

@@ -27,6 +27,10 @@ public class Board : MonoBehaviour
     public List<Block> blockList = new List<Block>(); // 블럭 리스트    
 
 
+    [Header("CanvasData")]
+    public float canvasScaleFactor;
+
+
     //private
 
     private readonly int boardXSize = 7;      // 가로 블럭 칸 개수
@@ -35,6 +39,8 @@ public class Board : MonoBehaviour
 
     private Coroutine blockDropCoroutine = null; // 블럭 드랍 코루틴 
     private float moveSearchDuration = 0.3f; // 다음 블럭 서치 속도
+    private int blockSpawnReadyCount = 0; // 블럭 스폰해야 할 카운트. 1 이상이면 update에서 블록을 스폰하려고 시도.
+    public void PlusBlockSpawnCount() => blockSpawnReadyCount++;
 
 
 
@@ -46,6 +52,7 @@ public class Board : MonoBehaviour
     private void Start()
     {
         Initialize();
+        canvasScaleFactor = transform.root.GetComponent<Canvas>().scaleFactor;
     }
 
     public void Initialize()
@@ -84,15 +91,19 @@ public class Board : MonoBehaviour
     {
         //@@@ TODO 일단 이렇게 해놓고 최적화는 나중에 처리하기로...
 
-        if (nodeMap[rootNodePoint].block == null)
+        if (blockSpawnReadyCount > 0)
         {
-            BlockColor color = (BlockColor)UnityEngine.Random.Range(0, (int)BlockColor.Count);
-            var block = SpawnBlock(BlockType.Normal, color);
-            block?.CheckMoveable();
-        }
-        else
-        {
-            nodeMap[rootNodePoint].block.CheckMoveable();
+            if (nodeMap[rootNodePoint].block == null)
+            {
+                BlockColor color = (BlockColor)UnityEngine.Random.Range(0, (int)BlockColor.Count);
+                var block = SpawnBlock(BlockType.Normal, color);
+                block?.CheckMoveable();
+                --blockSpawnReadyCount;
+            }
+            else
+            {
+                nodeMap[rootNodePoint].block.CheckMoveable();
+            }
         }
     }
 
@@ -262,11 +273,16 @@ public class Board : MonoBehaviour
 
     }
 
-    bool MatchCheck(Vector2Int nodePoint)
+    bool MatchCheck(List<Vector2Int> nodePoints)
     {
-        if (nodeMap[nodePoint] == null || nodeMap[nodePoint].block == null)
-            return false;
+        // 해당 좌표 블럭이 3개 이상 연결되었는지를 체크
+        // 블럭이 3개 이상, 5개 이하 연결된 경우 매치 처리
 
+        foreach (var nodePoint in nodePoints)
+        {
+            if (nodeMap[nodePoint] == null || nodeMap[nodePoint].block == null)
+                return false;
+        }
 
         // 해당 좌표 블럭이 3개 이상 연결되었는지를 체크
 
@@ -293,7 +309,6 @@ public class Board : MonoBehaviour
 
         int startY = startPoint != null ? startPoint.Value.y : boardYSize - 1;
 
-
         //1. y 시작 y좌표 또는 boardYSize ~ 0 순회
         //2. 홀수인 x boardXSize ~ 0 순회
         //3. 짝수인 x boardXSize ~ 0 순회
@@ -302,21 +317,9 @@ public class Board : MonoBehaviour
 
         for (int y = startY; y >= 0; --y)
         {
-            // for (int x = 0; x < boardXSize; ++x)
-            // {
-            //     Vector2Int point = new Vector2Int(x, y);
-            //     HLLogger.Log($"CheckMoveableAllBlock {point}");
-
-            //     nodeMap[point]?.block?.CheckMoveable();
-            // }
-            // yield return new WaitForSeconds(moveSearchDuration);
-
-
             for (int x = 1; x < boardXSize; x += 2)
             {
                 Vector2Int point = new Vector2Int(x, y);
-                HLLogger.Log($"CheckMoveableAllBlock {point}");
-
                 nodeMap[point]?.block?.CheckMoveable();
             }
             // yield return new WaitForSeconds(moveSearchDuration);
@@ -324,8 +327,6 @@ public class Board : MonoBehaviour
             for (int x = 0; x < boardXSize; x += 2)
             {
                 Vector2Int point = new Vector2Int(x, y);
-                HLLogger.Log($"CheckMoveableAllBlock {point}");
-
                 nodeMap[point]?.block?.CheckMoveable();
             }
 
@@ -347,6 +348,29 @@ public class Board : MonoBehaviour
 
 
 
+    }
+
+
+    #endregion
+
+
+
+    #region SwapLogic
+
+
+    public void SwapBlock(Block blockA, Block blockB)
+    {
+        HLLogger.Log($"SwapBlock {blockA.nodePoint} <-> {blockB.nodePoint}");
+
+        var tempNodePoint = blockA.node.point;
+
+        blockA.ResetNode(blockB.node.point);
+        blockB.ResetNode(tempNodePoint);
+
+        // 블럭 스왑 후 매치 체크
+        List<Vector2Int> checkList = new List<Vector2Int>() { blockA.nodePoint, blockB.nodePoint };
+        blockA.DoMoveAnimation(blockA.node.point);
+        blockB.DoMoveAnimation(blockB.node.point, () => { MatchCheck(checkList); });
     }
 
 
