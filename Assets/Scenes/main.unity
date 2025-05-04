@@ -3230,7 +3230,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1566284816}
-  - component: {fileID: 1566284817}
   m_Layer: 5
   m_Name: PositionRoot
   m_TagString: Untagged
@@ -3306,22 +3305,6 @@ RectTransform:
   m_AnchoredPosition: {x: -450, y: 850}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1566284817
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1566284815}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 54c973be5847f0749972e133ba3cc30f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  nodePrefab: {fileID: 6924197419272059956, guid: 5c850a5fdde13564ab9c34968fe7b8cf, type: 3}
-  columns: 7
-  rows: 7
-  radius: 100
 --- !u!1 &1587948311
 GameObject:
   m_ObjectHideFlags: 0

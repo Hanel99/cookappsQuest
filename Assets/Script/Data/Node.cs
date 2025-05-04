@@ -10,7 +10,7 @@ public class Node
     public Block block;     // 해당 노드에 있는 블럭
 
     public Vector2Int point;                    // NodeMap 좌표 (Key)
-    public Vector2Int?[] linkedNode = null;     // 연결 된 노드
+    public Vector2Int?[] linkedNodePoint = null;     // 연결 된 노드 포인트
     public bool isOn = true; // 사용하지 않는 노드(투명 노드)
 
     private List<Vector2Int> nextNodePointList = new(); //다음 노드 찾기에 사용되는 임시 리스트
@@ -18,27 +18,29 @@ public class Node
     public Node(Vector2Int point, Vector2Int?[] foundedLinkedNode)
     {
         this.point = point;
-        linkedNode = foundedLinkedNode;
+        linkedNodePoint = foundedLinkedNode;
     }
 
 
     public Vector2Int? FindMoveNodePoint()
     {
         // 바로 아래 노드가 비어있으면 아래로 우선 이동
-        var node = FindNode(Direction.DOWN);
+        var node = GetNode(Direction.DOWN);
         if (node != null && node.block == null)
         {
             return node.point;
         }
 
-        // 아래 양 옆 노드가 비어있으면 빈 곳으로 이동.
+        // 아래 양 옆 노드가 비어있고, 그 위도 비어있다면 면 빈 곳으로 이동.
         nextNodePointList.Clear();
-        var DLNode = FindNode(Direction.DOWNLEFT);
-        if (DLNode != null && DLNode.block == null)
+        var DLNode = GetNode(Direction.DOWNLEFT);
+        var ULNode = GetNode(Direction.UPLEFT);
+        if (DLNode != null && DLNode.block == null && (ULNode == null || (ULNode != null && ULNode.block == null)))
             nextNodePointList.Add(DLNode.point);
 
-        var DRNode = FindNode(Direction.DOWNRIGHT);
-        if (DRNode != null && DRNode.block == null)
+        var DRNode = GetNode(Direction.DOWNRIGHT);
+        var URNode = GetNode(Direction.UPRIGHT);
+        if (DRNode != null && DRNode.block == null && (URNode == null || (URNode != null && URNode.block == null)))
             nextNodePointList.Add(DRNode.point);
 
 
@@ -61,9 +63,9 @@ public class Node
     }
 
 
-    public Node FindNode(Direction dir)
+    public Node GetNode(Direction dir)
     {
-        Vector2Int? targetNodePoint = linkedNode[(int)dir];
+        Vector2Int? targetNodePoint = linkedNodePoint[(int)dir];
         if (targetNodePoint.HasValue)
         {
             return Board.instance.nodeMap[targetNodePoint.Value];

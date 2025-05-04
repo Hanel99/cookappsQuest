@@ -5,8 +5,8 @@ public class UIHexGridGenerator : MonoBehaviour
 {
     public RectTransform nodePrefab;  // 노드 프리팹
     public int columns = 7;
-    public int rows = 6;
-    public float radius = 50f;  // 육각형 외접반지름 (픽셀 기준)
+    public int rows = 7;
+    public float radius = 100f;  // 육각형 외접반지름 (픽셀 기준)
 
     void Start()
     {

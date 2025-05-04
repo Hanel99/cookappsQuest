@@ -9,6 +9,9 @@ using UnityEngine;
 
 public class Board : MonoBehaviour
 {
+    // 보드 인게임 로직 등에 관련을 처리
+    // 게임 진행이나 상황 등은 GameManager에서 관리
+
     public static Board instance;
 
 
@@ -17,22 +20,22 @@ public class Board : MonoBehaviour
     private Vector2Int rootNodePoint = new Vector2Int(3, 0); // 블럭이 스폰될 노드 포지션
     public List<Transform> blockPositionList = new List<Transform>();                 // 블럭, 노드 위치 포지션 저장할 리스트
     public Dictionary<Vector2Int, Node> nodeMap = new Dictionary<Vector2Int, Node>(); // 노드 찾아오기용 노드맵
-    public List<Node> nodeList = new(); //디버그용 노드 리스트. 딕셔너리 안보여서...
+    public List<Node> nodeList = new(); //디버그용 노드 리스트. 딕셔너리 안보여서... @@@ 다 만들고 삭제 필요
 
 
     [Header("Block")]
     public List<Block> blockList = new List<Block>(); // 블럭 리스트    
 
 
+    //private
 
+    private readonly int boardXSize = 7;      // 가로 블럭 칸 개수
+    private readonly int boardYSize = 7;      // 세로 블럭 칸 개수
+    private bool isMatchingAnimationAct = false; // 액션 중에는 터치 불가능하게
 
+    private Coroutine blockDropCoroutine = null; // 블럭 드랍 코루틴 
+    private float moveSearchDuration = 0.3f; // 다음 블럭 서치 속도
 
-
-    private bool isMatchingAnimationAct = false;
-
-    // private float blockMergeSpeed = 1f;
-    // private float mergeDuration => mergeTime * blockMergeSpeed;
-    // private float moveDuration => blockMoveTime * blockMergeSpeed;
 
 
     private void Awake()
@@ -48,13 +51,56 @@ public class Board : MonoBehaviour
     public void Initialize()
     {
         SetNodeMap();
+        InitBoardBlock();
+    }
+
+    private void InitBoardBlock()
+    {
+        // 초기 블럭들 배치
+
         blockList.Clear();
+
+        //3개 이상 연결된 블럭이 있으면 안됨.
+
+        foreach (var node in nodeMap)
+        {
+            if (node.Value.isOn)
+            {
+                BlockColor color = (BlockColor)UnityEngine.Random.Range(0, (int)BlockColor.Count);
+
+                Block block = SpawnBlock(BlockType.Normal, color, node.Key);
+                // block.node = node.Value;
+                // node.Value.block = block;
+            }
+        }
+
+
     }
 
 
+
+
+    void Update()
+    {
+        //@@@ TODO 일단 이렇게 해놓고 최적화는 나중에 처리하기로...
+
+        if (nodeMap[rootNodePoint].block == null)
+        {
+            BlockColor color = (BlockColor)UnityEngine.Random.Range(0, (int)BlockColor.Count);
+            var block = SpawnBlock(BlockType.Normal, color);
+            block?.CheckMoveable();
+        }
+        else
+        {
+            nodeMap[rootNodePoint].block.CheckMoveable();
+        }
+    }
+
+
+
+
+
     #region Node
-
-
 
     public void SetNodeMap()
     {
@@ -62,9 +108,9 @@ public class Board : MonoBehaviour
         nodeList.Clear();
 
         // 노드 생성 및 셋팅
-        for (int x = 0; x < StaticGameData.BoardXSize; ++x)
+        for (int x = 0; x < boardXSize; ++x)
         {
-            for (int y = 0; y < StaticGameData.BoardYSize; ++y)
+            for (int y = 0; y < boardYSize; ++y)
             {
                 var point = new Vector2Int(x, y);
                 Node node = new Node(point, GetLinkedNode(point));
@@ -78,8 +124,8 @@ public class Board : MonoBehaviour
 
     private Vector2Int?[] GetLinkedNode(Vector2Int point)
     {
-        //맨 왼쪽칸부터 오른쪽 순으로 x -> 0 1 ... StaticGameData.BoardXSize
-        //맨 위쪽칸부터 아래칸 순으로 y -> 0 1 ... StaticGameData.BoardYSize 까지
+        //맨 왼쪽칸부터 오른쪽 순으로 x -> 0 1 ... boardXSize
+        //맨 위쪽칸부터 아래칸 순으로 y -> 0 1 ... boardYSize 까지
         //x가 홀수일 경우를 정 위치로 기준. 짝수일 경우 y를 좀 더 내린 포지션으로 생각한다.
 
         // x가 홀수인 경우와 짝수인 경우 연결 노드 공식이 다르다.
@@ -111,8 +157,8 @@ public class Board : MonoBehaviour
     private bool IsValid(Vector2Int point)
     {
         // 해당 노드가 유효한지 확인
-        bool isValid = point.x >= 0 && point.x < StaticGameData.BoardXSize
-             && point.y >= 0 && point.y < StaticGameData.BoardYSize;
+        bool isValid = point.x >= 0 && point.x < boardXSize
+                    && point.y >= 0 && point.y < boardYSize;
 
         // 21 스테이지에서 사용하지 않는 특수 노드의 경우
         if (point.x == 0 && point.y == 0
@@ -167,9 +213,12 @@ public class Board : MonoBehaviour
     #region Block
 
     int blockSpawnCount = 0;
-    public Block SpawnBlock(BlockType type, BlockColor color)
+    public Block SpawnBlock(BlockType type, BlockColor color, Vector2Int? nodePoint = null)
     {
-        if (nodeMap[rootNodePoint].block != null)
+        if (nodePoint == null)
+            nodePoint = rootNodePoint;
+
+        if (nodeMap[nodePoint.Value].block != null)
         {
             HLLogger.Log("@@@ block is already exist");
             return null;
@@ -178,9 +227,9 @@ public class Board : MonoBehaviour
         Block block = ObjectPool.instance.Spawn();
         block.name = $"block_{blockSpawnCount.ToString("D3")}";
 
-        block.SetBlockData(rootNodePoint, type, color);
+        block.SetBlockData(nodePoint.Value, type, color);
         block.transform.SetParent(blockRoot);
-        block.transform.localPosition = GetBlockPosition(rootNodePoint);
+        block.transform.localPosition = GetBlockPosition(nodePoint.Value);
 
         blockSpawnCount++;
         blockList.Add(block);
@@ -195,7 +244,109 @@ public class Board : MonoBehaviour
 
     public Vector2 GetBlockPosition(Vector2Int nodePoint)
     {
-        return blockPositionList[nodePoint.y + (nodePoint.x * StaticGameData.BoardXSize)].localPosition;
+        return blockPositionList[nodePoint.y + (nodePoint.x * boardXSize)].localPosition;
+    }
+
+
+    #endregion
+
+
+    #region SearchLogic
+
+
+
+    void MatchCheckAllBlock()
+    {
+        // 모든 블럭이 3개 이상 연결되었는지를 체크
+
+
+    }
+
+    bool MatchCheck(Vector2Int nodePoint)
+    {
+        if (nodeMap[nodePoint] == null || nodeMap[nodePoint].block == null)
+            return false;
+
+
+        // 해당 좌표 블럭이 3개 이상 연결되었는지를 체크
+
+
+
+        return false;
+    }
+
+
+    public void CheckMoveableAllBlock(Vector2Int? startPoint = null)
+    {
+        if (blockDropCoroutine != null)
+            StopCoroutine(blockDropCoroutine);
+
+        blockDropCoroutine = StartCoroutine(Co_CheckMoveableAllBlock(startPoint));
+    }
+
+
+
+    IEnumerator Co_CheckMoveableAllBlock(Vector2Int? startPoint)
+    {
+        // 시작 지점부터 모든 노드를 순회해서 떨어질 수 있는 블럭이 있으면 순차적으로 드랍.
+        // 시작지점이 null이면 최하단 노드부터 시작.
+
+        int startY = startPoint != null ? startPoint.Value.y : boardYSize - 1;
+
+
+        //1. y 시작 y좌표 또는 boardYSize ~ 0 순회
+        //2. 홀수인 x boardXSize ~ 0 순회
+        //3. 짝수인 x boardXSize ~ 0 순회
+        //4. 0 0 에 도착하면 멈춤.
+        //5. 1~3 을 반복할때 일정 시간 딜레이 간격이 필요
+
+        for (int y = startY; y >= 0; --y)
+        {
+            // for (int x = 0; x < boardXSize; ++x)
+            // {
+            //     Vector2Int point = new Vector2Int(x, y);
+            //     HLLogger.Log($"CheckMoveableAllBlock {point}");
+
+            //     nodeMap[point]?.block?.CheckMoveable();
+            // }
+            // yield return new WaitForSeconds(moveSearchDuration);
+
+
+            for (int x = 1; x < boardXSize; x += 2)
+            {
+                Vector2Int point = new Vector2Int(x, y);
+                HLLogger.Log($"CheckMoveableAllBlock {point}");
+
+                nodeMap[point]?.block?.CheckMoveable();
+            }
+            // yield return new WaitForSeconds(moveSearchDuration);
+
+            for (int x = 0; x < boardXSize; x += 2)
+            {
+                Vector2Int point = new Vector2Int(x, y);
+                HLLogger.Log($"CheckMoveableAllBlock {point}");
+
+                nodeMap[point]?.block?.CheckMoveable();
+            }
+
+            yield return new WaitForSeconds(moveSearchDuration);
+        }
+
+
+    }
+
+    void CheckMatchableAllBlock()
+    {
+        // 시작 지점부터 모든 노드를 순회해서 매치가 가능한 블럭이 있는지를 확인.
+        // 
+
+
+
+
+
+
+
+
     }
 
 

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,28 +19,12 @@ public class Block : MonoBehaviour
     //private
     private bool onMoving = false;
     private Coroutine cor = null;
-    private float moveSpeed = 0.05f; // 블럭 이동 속도
+    private float moveDuration = 0.2f; // 블럭 이동 속도
 
 
     public void Awake()
     {
         TryGetComponent<Button>(out button);
-    }
-
-    public void Remove()
-    {
-        DOTween.Kill(gameObject);
-        if (cor != null) StopCoroutine(cor);
-
-
-        node.block = null;
-
-        //@@@ 이건 고민좀 해보자. 연쇄작업이 일어나야 함
-        node.FindNode(Direction.UP)?.block?.CheckMoveable();
-        node.FindNode(Direction.UPLEFT)?.block?.CheckMoveable();
-        node.FindNode(Direction.UPRIGHT)?.block?.CheckMoveable();
-
-        ObjectPool.instance.Recycle(this);
     }
 
     public void SetBlockData(Vector2Int nodePoint, BlockType type, BlockColor color)
@@ -52,22 +37,6 @@ public class Block : MonoBehaviour
     }
 
 
-
-    public void MoveBlock(Vector2Int targetNodePoint)
-    {
-        var targetNode = Board.instance.GetNode(targetNodePoint);
-
-        node.block = null;
-        node = targetNode;
-        targetNode.block = this;
-        nodePoint = targetNode.point;
-    }
-
-    public void SetBlockPosition(Transform t)
-    {
-        transform.position = t.position;
-    }
-
     public void OnClickBlock()
     {
         // 예외 조건
@@ -79,17 +48,40 @@ public class Block : MonoBehaviour
 
 
         //@@@ 삭제 테스트
-        Remove();
+        RemoveBlock();
+        node.GetNode(Direction.UPLEFT)?.block?.RemoveBlock();
+        node.GetNode(Direction.UPLEFT)?.GetNode(Direction.UPLEFT)?.block?.RemoveBlock();
+
+        Board.instance.CheckMoveableAllBlock(nodePoint);
     }
 
 
+    public void RemoveBlock()
+    {
+        DOTween.Kill(gameObject);
+        if (cor != null) StopCoroutine(cor);
+
+
+        node.block = null;
+
+        //@@@ 이건 고민좀 해보자. 연쇄작업이 일어나야 함
+        //여기서 할게 아니고 매치가 일어났으면 이동 후 보드에서 전체순회로 확인하는걸로
+        // node.FindNode(Direction.UP)?.block?.CheckMoveable();
+        // node.FindNode(Direction.UPLEFT)?.block?.CheckMoveable();
+        // node.FindNode(Direction.UPRIGHT)?.block?.CheckMoveable();     
+        ObjectPool.instance.Recycle(this);
+    }
+
+
+    #region Move Logic
+
     public void CheckMoveable()
     {
+        // 아래, 좌하 우하단에 이동가능한지 체크 및 이동 로직
         var nodePoint = node.FindMoveNodePoint();
         if (nodePoint != null)
             StartCoroutine(Co_MoveBlock(nodePoint.Value));
     }
-
 
     private IEnumerator Co_MoveBlock(Vector2Int targetNodePoint)
     {
@@ -98,12 +90,41 @@ public class Block : MonoBehaviour
         MoveBlock(targetNodePoint);
 
         Vector2 targetPos = Board.instance.GetBlockPosition(targetNodePoint);
-        transform.DOLocalMove(targetPos, moveSpeed).SetEase(Ease.Linear);
+        transform.DOLocalMove(targetPos, moveDuration).SetEase(Ease.Linear);
 
-        yield return new WaitForSeconds(moveSpeed);
+        yield return new WaitForSeconds(moveDuration);
         onMoving = false;
         CheckMoveable();
     }
+
+    public void MoveBlock(Vector2Int targetNodePoint)
+    {
+        var targetNode = Board.instance.GetNode(targetNodePoint);
+
+        node.block = null;
+        node = targetNode;
+        targetNode.block = this;
+        nodePoint = targetNode.point;
+    }
+
+    #endregion
+
+
+    #region Match Logic
+
+    public void CheckMatchable()
+    {
+
+    }
+
+    #endregion
+
+
+
+
+
+
+
 
 
 }
