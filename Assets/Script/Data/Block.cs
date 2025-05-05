@@ -17,6 +17,7 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
 
     public Vector2Int nodePoint; //해당 블럭이 있는 노드의 인덱스
     public BlockType blockType = BlockType.Normal;
+    public BlockColor blockColor = BlockColor.Blue;
     public Node node;               // 블럭이 있는 노드. 참고용으로만 사용하는걸 권장
 
 
@@ -37,6 +38,7 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         blockType = type;
         node = Board.instance.GetNode(nodePoint);
         node.block = this;
+        blockColor = color;
         blockImage.sprite = ResourceManager.instance.GetBlockImage(color);
 
 
@@ -151,8 +153,9 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         if (onMoving) return;
         if (dir == Direction.ERROR) return;
 
+        // 해당방향에 노드가 없거나, 블럭이 없거나, 루트노드의 경우는 이동 불가
         var targetNode = clickBlock.node.GetNode(dir);
-        if (targetNode == null || targetNode.block == null)
+        if (targetNode == null || targetNode.block == null || targetNode.point == Board.instance.RootNodePoint)
             return;
 
         // 클릭블럭과 드래그 방향의 노드에 있는 블럭을 스왑
