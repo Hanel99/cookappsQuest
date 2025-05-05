@@ -37,10 +37,13 @@ public class Board : MonoBehaviour
     private readonly int boardXSize = 7;      // 가로 블럭 칸 개수
     private readonly int boardYSize = 7;      // 세로 블럭 칸 개수
     private bool isMatchingAnimationAct = false; // 액션 중에는 터치 불가능하게
+    public bool IsMatchingAnimationAct => isMatchingAnimationAct;
 
     private Coroutine blockDropCoroutine = null; // 블럭 드랍 코루틴 
-    private float moveSearchDuration = 0.3f; // 다음 블럭 서치 속도
+    private float moveSearchDuration = 0.15f; // 다음 블럭 서치 속도
     private int blockSpawnReadyCount = 0; // 블럭 스폰해야 할 카운트. 1 이상이면 update에서 블록을 스폰하려고 시도.
+
+    private HashSet<Vector2Int> matchNodePointList = new HashSet<Vector2Int>(); // 매치된 블록들. 스왑 및 삭제 로직에서 사용
 
 
 
@@ -65,7 +68,6 @@ public class Board : MonoBehaviour
     private void InitBoardBlock()
     {
         // 초기 블럭들 배치
-
         blockList.Clear();
 
         //@@@ 3개 이상 연결된 블럭이 있으면 안됨.
@@ -248,15 +250,33 @@ public class Board : MonoBehaviour
         return block;
     }
 
-    public void RecycleBlock(Block block)
-    {
-        blockList.Remove(block);
-        ObjectPool.instance.Recycle(block);
-    }
-
     public Vector2 GetBlockPosition(Vector2Int nodePoint)
     {
         return blockPositionList[nodePoint.y + (nodePoint.x * boardXSize)].localPosition;
+    }
+
+
+
+    public void RemoveMatchBlocks()
+    {
+        isMatchingAnimationAct = true;
+        foreach (var point in matchNodePointList)
+        {
+            // 매치된 블럭들에 대해서는 블럭을 삭제
+            var block = nodeMap[point].block;
+            if (block != null)
+            {
+                if (moveCheckStartPoint.y < point.y)
+                    moveCheckStartPoint = new Vector2Int(0, point.y);
+
+                blockList.Remove(block);
+                block.RemoveBlock();
+            }
+        }
+
+        // 블럭 드랍 체크
+        CheckMoveableAllBlock(moveCheckStartPoint);
+        matchNodePointList.Clear();
     }
 
 
@@ -269,6 +289,7 @@ public class Board : MonoBehaviour
 
     #region SearchLogic
 
+
     void MatchCheckAllBlock()
     {
         // 모든 블럭이 3개 이상 연결되었는지를 체크
@@ -280,13 +301,17 @@ public class Board : MonoBehaviour
             {
                 var nodePoints = node.Value.point;
                 isMatch = isMatch || MatchCheck(nodePoints);
-                if (isMatch)
-                {
-                    HLLogger.Log($"isMatch : {isMatch} - {nodePoints}");
-                    break;
-                }
             }
         }
+
+        if (isMatch)
+        {
+            var s1 = string.Join(", ", matchNodePointList.Select(p => p.ToString()).ToArray());
+            HLLogger.Log($"MatchCheckAllBlock : {isMatch} - {s1}");
+            RemoveMatchBlocks();
+        }
+        else
+            isMatchingAnimationAct = false;
     }
 
     bool MatchCheck(List<Vector2Int> nodePoints)
@@ -312,97 +337,55 @@ public class Board : MonoBehaviour
         var block = nodeMap[nodePoint].block;
         Node node1 = null;
         Node node2 = null;
+        BlockColor color = block.blockColor;
         bool isMatch = false;
-        HashSet<Vector2Int> matchNodePointList = new HashSet<Vector2Int>();
+
 
         //1 각 방향으로 두개 동일 블럭이 있는지 체크
         for (Direction dir = Direction.UP; dir < Direction.ERROR; ++dir)
         {
             //해당 방향 노드가 없거나, 블럭이 없거나, 다른 블럭이면 다음 방향 검사
             node1 = nodeMap[nodePoint].GetNode(dir);
-            if (node1 == null || node1.block == null || node1.block.blockColor != block.blockColor) continue;
+            if (node1 == null || node1.block == null || node1.block.blockColor != color) continue;
 
             node2 = node1.GetNode(dir);
-            if (node2 == null || node2.block == null || node2.block.blockColor != block.blockColor) continue;
+            if (node2 == null || node2.block == null || node2.block.blockColor != color) continue;
 
             // 두개 블럭이 동일하면 매치 가능
             isMatch = true;
             matchNodePointList.Add(node1.point);
             matchNodePointList.Add(node2.point);
+
+            // 4개까지 연결되었는지 체크
+            var node3 = node1.GetNode(dir);
+            if (node3 != null && node3.block != null && node3.block.blockColor == color)
+                matchNodePointList.Add(node3.point);
         }
 
 
 
-
-        // node1 = nodeMap[nodePoint].GetNode(Direction.UP);
-        // node2 = nodeMap[nodePoint].GetNode(Direction.DOWN);
-        // if (node1 != null && node1.block != null && node1.block.blockColor == block.blockColor && node2 != null && node2.block != null && node2.block.blockColor == block.blockColor)
-        // {
-        //     isMatch = true;
-        //     matchNodePointList.Add(node1.point);
-        //     matchNodePointList.Add(node2.point);
-
-        //     // 4개까지 연결되었는지 체크
-        //     var node3 = node1.GetNode(Direction.UP);
-        //     if (node3 != null && node3.block != null && node3.block.blockColor == block.blockColor)
-        //         matchNodePointList.Add(node3.point);
-        //     node3 = node1.GetNode(Direction.DOWN);
-        //     if (node3 != null && node3.block != null && node3.block.blockColor == block.blockColor)
-        //         matchNodePointList.Add(node3.point);
-        // }
-
-        // node1 = nodeMap[nodePoint].GetNode(Direction.UPLEFT);
-        // node2 = nodeMap[nodePoint].GetNode(Direction.DOWNRIGHT);
-        // if (node1 != null && node1.block != null && node1.block.blockColor == block.blockColor && node2 != null && node2.block != null && node2.block.blockColor == block.blockColor)
-        // {
-        //     matchNodePointList.Add(node1.point);
-        //     matchNodePointList.Add(node2.point);
-        //     isMatch = true;
-
-        //     // 4개까지 연결되었는지 체크
-        //     var node3 = node1.GetNode(Direction.UP);
-        //     if (node3 != null && node3.block != null && node3.block.blockColor == block.blockColor)
-        //         matchNodePointList.Add(node3.point);
-        //     node3 = node1.GetNode(Direction.DOWN);
-        //     if (node3 != null && node3.block != null && node3.block.blockColor == block.blockColor)
-        //         matchNodePointList.Add(node3.point);
-        // }
-
-        // node1 = nodeMap[nodePoint].GetNode(Direction.UPRIGHT);
-        // node2 = nodeMap[nodePoint].GetNode(Direction.DOWNLEFT);
-        // if (node1 != null && node1.block != null && node1.block.blockColor == block.blockColor && node2 != null && node2.block != null && node2.block.blockColor == block.blockColor)
-        // {
-        //     matchNodePointList.Add(node1.point);
-        //     matchNodePointList.Add(node2.point);
-        //     isMatch = true;
-
-        //     // 4개까지 연결되었는지 체크
-        //     var node3 = node1.GetNode(Direction.UP);
-        //     if (node3 != null && node3.block != null && node3.block.blockColor == block.blockColor)
-        //         matchNodePointList.Add(node3.point);
-        //     node3 = node1.GetNode(Direction.DOWN);
-        //     if (node3 != null && node3.block != null && node3.block.blockColor == block.blockColor)
-        //         matchNodePointList.Add(node3.point);
-        // }
-
-
         //2 양쪽의 반대 반향으로 동일 블럭이 있는지 체크
-        CheckOtherSideNode(Direction.UP, Direction.DOWN);
-        CheckOtherSideNode(Direction.UPLEFT, Direction.DOWNRIGHT);
-        CheckOtherSideNode(Direction.UPRIGHT, Direction.DOWNLEFT);
+        CheckReverseSideNode(Direction.UP, Direction.DOWN);
+        CheckReverseSideNode(Direction.UPLEFT, Direction.DOWNRIGHT);
+        CheckReverseSideNode(Direction.UPRIGHT, Direction.DOWNLEFT);
+        if (isMatch)
+            matchNodePointList.Add(nodePoint);
 
-        var s1 = string.Join(", ", matchNodePointList.Select(p => p.ToString()).ToArray());
 
         // 전방향 체크했는데 없으면 해당 블럭은 매치 불가능
-        HLLogger.Log($"MatchCheck {nodePoint} : {isMatch} - {s1}");
+        if (isMatch)
+        {
+            var s1 = string.Join(", ", matchNodePointList.Select(p => p.ToString()).ToArray());
+            HLLogger.Log($"MatchCheck {nodePoint} : {isMatch} - {s1}");
+        }
         return isMatch;
 
 
-        void CheckOtherSideNode(Direction dir1, Direction dir2)
+        void CheckReverseSideNode(Direction dir1, Direction dir2)
         {
             node1 = nodeMap[nodePoint].GetNode(dir1);
             node2 = nodeMap[nodePoint].GetNode(dir2);
-            if (node1 != null && node1.block != null && node1.block.blockColor == block.blockColor && node2 != null && node2.block != null && node2.block.blockColor == block.blockColor)
+            if (node1 != null && node1.block != null && node1.block.blockColor == color && node2 != null && node2.block != null && node2.block.blockColor == color)
             {
                 isMatch = true;
                 matchNodePointList.Add(node1.point);
@@ -410,10 +393,10 @@ public class Board : MonoBehaviour
 
                 // 4개까지 연결되었는지 체크
                 var node3 = node1.GetNode(dir1);
-                if (node3 != null && node3.block != null && node3.block.blockColor == block.blockColor)
+                if (node3 != null && node3.block != null && node3.block.blockColor == color)
                     matchNodePointList.Add(node3.point);
                 node3 = node1.GetNode(dir2);
-                if (node3 != null && node3.block != null && node3.block.blockColor == block.blockColor)
+                if (node3 != null && node3.block != null && node3.block.blockColor == color)
                     matchNodePointList.Add(node3.point);
             }
         }
@@ -445,6 +428,7 @@ public class Board : MonoBehaviour
         //4. 0 0 에 도착하면 멈춤.
         //5. 1~3 을 반복할때 일정 시간 딜레이 간격이 필요
 
+        isMatchingAnimationAct = true;
         for (int y = startY; y >= 0; --y)
         {
             for (int x = 1; x < boardXSize; x += 2)
@@ -463,21 +447,8 @@ public class Board : MonoBehaviour
             yield return new WaitForSeconds(moveSearchDuration);
         }
 
-
-    }
-
-    void CheckMatchableAllBlock()
-    {
-        // 시작 지점부터 모든 노드를 순회해서 매치가 가능한 블럭이 있는지를 확인.
-        // 
-
-
-
-
-
-
-
-
+        isMatchingAnimationAct = false;
+        MatchCheckAllBlock();
     }
 
 
@@ -487,11 +458,9 @@ public class Board : MonoBehaviour
 
     #region SwapLogic
 
-
+    Vector2Int moveCheckStartPoint = new Vector2Int(0, 0);
     public void SwapBlock(Block blockA, Block blockB)
     {
-        HLLogger.Log($"SwapBlock {blockA.nodePoint} <-> {blockB.nodePoint}");
-
         var tempNodePoint = blockA.node.point;
 
         blockA.ResetNode(blockB.node.point);
@@ -499,9 +468,28 @@ public class Board : MonoBehaviour
 
         // 블럭 스왑 후 매치 체크
         List<Vector2Int> checkList = new List<Vector2Int>() { blockA.nodePoint, blockB.nodePoint };
+
+        isMatchingAnimationAct = true;
         blockA.DoMoveAnimation(blockA.node.point);
-        blockB.DoMoveAnimation(blockB.node.point, () => { MatchCheck(checkList); });
+        blockB.DoMoveAnimation(blockB.node.point, () =>
+        {
+            if (MatchCheck(checkList))
+            {
+                RemoveMatchBlocks();
+            }
+            else
+            {
+                // 매치가 없으면 블럭을 원래 위치로 되돌림
+                blockB.ResetNode(blockA.node.point);
+                blockA.ResetNode(tempNodePoint);
+
+                blockA.DoMoveAnimation(blockA.node.point);
+                blockB.DoMoveAnimation(blockB.node.point);
+                isMatchingAnimationAct = false;
+            }
+        });
     }
+
 
 
     #endregion

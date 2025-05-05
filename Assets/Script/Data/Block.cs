@@ -12,7 +12,6 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
     public Text tempText; //@@@ 삭제 필요. 디버그용 텍스트
 
 
-    public Button button;          // 블록 버튼
     public Image blockImage;      // 블록 이미지
 
     public Vector2Int nodePoint; //해당 블럭이 있는 노드의 인덱스
@@ -22,14 +21,18 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
 
 
     //private
-    private bool onMoving = false;
-    private Coroutine cor = null;
-    private float moveDuration = 0.2f; // 블럭 이동 속도
+    private bool onAnimation = false;
+    public bool OnAnimation => onAnimation;
+    private int hp = 0; // 팽이 블럭의 경우 2번 데미지를 받으면 파괴
+    public int HP => hp;
+    private Coroutine moveAni = null;
+    private Coroutine removeAni = null;
+    private float moveDuration = 0.1f; // 블럭 이동 속도
 
 
     public void Awake()
     {
-        TryGetComponent<Button>(out button);
+
     }
 
     public void SetBlockData(Vector2Int nodePoint, BlockType type, BlockColor color)
@@ -41,8 +44,10 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         blockColor = color;
         blockImage.sprite = ResourceManager.instance.GetBlockImage(color);
 
+        transform.localScale = Vector3.one;
+        blockImage.color = Color.white;
 
-        tempText.text = $"{nodePoint.x}, {nodePoint.y}";
+        tempText.text = $"{nodePoint.x}, {nodePoint.y}" + ((blockType == BlockType.PengE) ? $"\nHP {hp}" : "");
     }
 
     public void ResetNode(Vector2Int nodePoint)
@@ -51,42 +56,8 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         node = Board.instance.GetNode(nodePoint);
         node.block = this;
 
-        tempText.text = $"{nodePoint.x}, {nodePoint.y}";
+        tempText.text = $"{nodePoint.x}, {nodePoint.y}" + ((blockType == BlockType.PengE) ? $"\nHP {hp}" : "");
     }
-
-
-    public void OnClickBlock()
-    {
-        // 예외 조건
-        // if (GameManager.gameState != GameManager.GameState.Play) return;                    // 게임 플레이중 체크...
-        // if (GameManager.directionState == GameManager.DirectionState.Skill_Shuffle) return; // 셔플 연출중 체크...
-        // if (blockState != BlockState.Active && !forceTouch) return;                         // 활성 블록 && 강제터치 체크...
-
-
-
-
-
-        // if (onMoving) return;
-
-        // //@@@ 삭제 테스트
-        RemoveBlock();
-        node.GetNode(Direction.UPLEFT)?.block?.RemoveBlock();
-        node.GetNode(Direction.UPLEFT)?.GetNode(Direction.UPLEFT)?.block?.RemoveBlock();
-
-        Board.instance.CheckMoveableAllBlock(nodePoint);
-    }
-
-
-    public void RemoveBlock()
-    {
-        DOTween.Kill(gameObject);
-        if (cor != null) StopCoroutine(cor);
-
-        node.block = null;
-        Board.instance.AddBlockSpawnCount();
-        ObjectPool.instance.Recycle(this);
-    }
-
 
 
 
@@ -103,12 +74,15 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
     public void OnBeginDrag(PointerEventData eventData)
     {
         isDragging = true;
+        if (Board.instance.IsMatchingAnimationAct) return;
+
         startPosition = eventData.pressPosition;
     }
 
     public void OnDrag(PointerEventData eventData)
     {
         if (isDragging == false) return;
+        if (Board.instance.IsMatchingAnimationAct) return;
 
         dragPosition = eventData.position;
         dragVector = dragPosition - startPosition;
@@ -124,7 +98,6 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        HLLogger.Log($"OnEndDrag {gameObject.name}");
         isDragging = false;
     }
 
@@ -150,7 +123,7 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
 
     public void CheckAndSwapBlock(Block clickBlock, Direction dir)
     {
-        if (onMoving) return;
+        if (onAnimation) return;
         if (dir == Direction.ERROR) return;
 
         // 해당방향에 노드가 없거나, 블럭이 없거나, 루트노드의 경우는 이동 불가
@@ -187,20 +160,19 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
 
     public void DoMoveAnimation(Vector2Int targetNodePoint, Action callback = null)
     {
-        if (onMoving) return;
-        if (cor != null) StopCoroutine(cor);
-        cor = StartCoroutine(Co_MoveBlockAnimation(targetNodePoint, callback));
+        if (moveAni != null) StopCoroutine(moveAni);
+        moveAni = StartCoroutine(Co_MoveBlockAnimation(targetNodePoint, callback));
     }
 
     private IEnumerator Co_MoveBlockAnimation(Vector2Int targetNodePoint, Action callback = null)
     {
-        onMoving = true;
+        onAnimation = true;
 
         Vector2 targetPos = Board.instance.GetBlockPosition(targetNodePoint);
         transform.DOLocalMove(targetPos, moveDuration).SetEase(Ease.Linear);
 
         yield return new WaitForSeconds(moveDuration);
-        onMoving = false;
+        onAnimation = false;
 
         callback?.Invoke();
     }
@@ -214,18 +186,49 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         targetNode.block = this;
         nodePoint = targetNode.point;
 
-        tempText.text = $"{nodePoint.x}, {nodePoint.y}";
+        tempText.text = $"{nodePoint.x}, {nodePoint.y}" + ((blockType == BlockType.PengE) ? $"\nHP {hp}" : "");
     }
 
     #endregion
 
 
-    #region Match Logic
+    #region Match & Remove Logic
 
     public void CheckMatchable()
     {
 
     }
+
+    public void DoRemoveAnimation()
+    {
+        if (removeAni != null) StopCoroutine(removeAni);
+        removeAni = StartCoroutine(Co_RemoveBlockAnimation());
+    }
+
+    private IEnumerator Co_RemoveBlockAnimation()
+    {
+        onAnimation = true;
+        transform.DOScale(1.5f, moveDuration).SetEase(Ease.Linear);
+        blockImage.DOFade(0, moveDuration).SetEase(Ease.Linear);
+
+        yield return new WaitForSeconds(moveDuration);
+        onAnimation = false;
+
+        node.block = null;
+        Board.instance.AddBlockSpawnCount();
+        ObjectPool.instance.Recycle(this);
+    }
+
+
+
+    public void RemoveBlock()
+    {
+        DOTween.Kill(gameObject);
+        if (moveAni != null) StopCoroutine(moveAni);
+
+        DoRemoveAnimation();
+    }
+
 
     #endregion
 

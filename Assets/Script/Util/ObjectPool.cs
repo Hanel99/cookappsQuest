@@ -49,6 +49,7 @@ public class ObjectPool : MonoBehaviour
     public void Recycle(Block block)
     {
         block.gameObject.SetActive(false);
+        block.transform.SetParent(transform);
         blockPool.Enqueue(block);
     }
 
