@@ -9,10 +9,5 @@ public class ResourceScriptableData : ScriptableObject
 
     [Header("- Sprite")]
     public List<Sprite> blockImages = new();
-
-
-    [Header("- Prefabs")]
-    public GameObject blockPrefab;
-
-
+    public List<Sprite> specialBlockImages = new();
 }

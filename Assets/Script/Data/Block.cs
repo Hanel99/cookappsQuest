@@ -21,6 +21,7 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
 
 
     //private
+    private SpriteAnimator spriteAnimator = null;
     private bool onAnimation = false;
     public bool OnAnimation => onAnimation;
     private int hp = 0; // 팽이 블럭의 경우 2번 데미지를 받으면 파괴
@@ -32,7 +33,7 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
 
     public void Awake()
     {
-
+        spriteAnimator = GetComponent<SpriteAnimator>();
     }
 
     public void SetBlockData(Vector2Int nodePoint, BlockType type, BlockColor color)
@@ -42,12 +43,22 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         node = Board.instance.GetNode(nodePoint);
         node.block = this;
         blockColor = color;
-        blockImage.sprite = ResourceManager.instance.GetBlockImage(color);
+
+        if (blockType == BlockType.Special)
+        {
+            blockImage.sprite = ResourceManager.instance.GetSpecialBlockImage(0);
+            hp = 2;
+        }
+        else
+        {
+            blockImage.sprite = ResourceManager.instance.GetBlockImage(color);
+            hp = 0;
+        }
 
         transform.localScale = Vector3.one;
         blockImage.color = Color.white;
 
-        tempText.text = $"{nodePoint.x}, {nodePoint.y}" + ((blockType == BlockType.PengE) ? $"\nHP {hp}" : "");
+        tempText.text = $"{nodePoint.x}, {nodePoint.y}" + ((blockType == BlockType.Special) ? $"\nHP {hp}" : "");
     }
 
     public void ResetNode(Vector2Int nodePoint)
@@ -56,7 +67,7 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         node = Board.instance.GetNode(nodePoint);
         node.block = this;
 
-        tempText.text = $"{nodePoint.x}, {nodePoint.y}" + ((blockType == BlockType.PengE) ? $"\nHP {hp}" : "");
+        tempText.text = $"{nodePoint.x}, {nodePoint.y}" + ((blockType == BlockType.Special) ? $"\nHP {hp}" : "");
     }
 
 
@@ -186,7 +197,7 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         targetNode.block = this;
         nodePoint = targetNode.point;
 
-        tempText.text = $"{nodePoint.x}, {nodePoint.y}" + ((blockType == BlockType.PengE) ? $"\nHP {hp}" : "");
+        tempText.text = $"{nodePoint.x}, {nodePoint.y}" + ((blockType == BlockType.Special) ? $"\nHP {hp}" : "");
     }
 
     #endregion
@@ -194,9 +205,22 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
 
     #region Match & Remove Logic
 
-    public void CheckMatchable()
+    public void OnDamage(int damage = 1)
     {
+        //특수 블럭에 데미지 부여
+        if (blockType == BlockType.Normal) return;
 
+        hp -= damage;
+        if (hp <= 0)
+        {
+            RemoveBlock();
+        }
+        else
+        {
+            // 블럭 데미지 1인 상태
+            spriteAnimator.PlayAnimation();
+            tempText.text = $"{nodePoint.x}, {nodePoint.y}" + $"\nHP {hp}";
+        }
     }
 
     public void DoRemoveAnimation()

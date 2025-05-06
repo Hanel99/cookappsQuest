@@ -19,4 +19,16 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 5e25169021283f343bc9743b9d521e62, type: 3}
   - {fileID: 21300000, guid: 318133a33ecb2d84eb75ed8f55ced1d3, type: 3}
   - {fileID: 21300000, guid: e4a9742dc0d27a840835d1212b8591a4, type: 3}
-  blockPrefab: {fileID: 0}
+  specialBlockImages:
+  - {fileID: 21300000, guid: 024af2b4178ebc4419920370b427152d, type: 3}
+  - {fileID: 21300000, guid: dce9601e8f600514ba8f7469212d51e7, type: 3}
+  - {fileID: 21300000, guid: 4d981e23af94486499aa7150ca449e6c, type: 3}
+  - {fileID: 21300000, guid: 4e812c1c4df6f6e4d9bf5464b51d9b86, type: 3}
+  - {fileID: 21300000, guid: fc8279e1cd7417c43b152d542d238efc, type: 3}
+  - {fileID: 21300000, guid: 59ad42fb512ac734e9378048b73c215f, type: 3}
+  - {fileID: 21300000, guid: 38023c7f5a435104799abe406bd6a2db, type: 3}
+  - {fileID: 21300000, guid: bb542e2e70834144a8ab558bfe76f264, type: 3}
+  - {fileID: 21300000, guid: 30b781a9def36ba45ba50d11ad9e946e, type: 3}
+  - {fileID: 21300000, guid: 1715ea90148f188469183a45c63b7192, type: 3}
+  - {fileID: 21300000, guid: 88ec22c1f2c6c8844a8f0210525f3fc7, type: 3}
+  - {fileID: 21300000, guid: 875142f1035ac7a41bbd2c062b7af196, type: 3}

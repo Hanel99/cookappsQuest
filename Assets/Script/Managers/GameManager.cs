@@ -7,6 +7,7 @@ public class GameManager : MonoBehaviour
     // 보드 인게임 로직 등에 관련한건 Board에서 처리
 
     public static GameManager instance { get; private set; }
+    private GameState gameState = GameState.Ready;
 
 
 
@@ -19,6 +20,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        gameState = GameState.Ready;
 
     }
 
@@ -29,9 +31,16 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            Board.instance.AddBlockSpawnCount();
-        }
+#if UNITY_EDITOR
+        // 에디터에서만 사용할 치트
+        // if (Input.GetKeyDown(KeyCode.Space))
+        // {
+        //     Board.instance.AddBlockSpawnCount();
+        // }
+#endif
+
+
+
+
     }
 }

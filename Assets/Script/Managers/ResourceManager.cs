@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class ResourceManager : MonoBehaviour
@@ -17,11 +18,20 @@ public class ResourceManager : MonoBehaviour
 
     public Sprite GetBlockImage(BlockColor color)
     {
-        Sprite sprite = resourceScriptableData.blockImages[(int)color];
-
-        return sprite;
+        return resourceScriptableData.blockImages[(int)color];
     }
 
+
+    public List<Sprite> GetSpecialBlockImages()
+    {
+        return resourceScriptableData.specialBlockImages;
+    }
+
+    public Sprite GetSpecialBlockImage(int index)
+    {
+        index = Mathf.Clamp(index, 0, resourceScriptableData.specialBlockImages.Count - 1);
+        return resourceScriptableData.specialBlockImages[index];
+    }
 
 
 

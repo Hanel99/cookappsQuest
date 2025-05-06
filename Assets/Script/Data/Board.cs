@@ -26,17 +26,15 @@ public class Board : MonoBehaviour
 
     [Header("Block")]
     public List<Block> blockList = new List<Block>(); // 블럭 리스트    
+    public List<Block> specialBlockList = new List<Block>(); // 특수 블럭(팽이) 리스트
 
-
-    [Header("CanvasData")]
-    public float canvasScaleFactor;
 
 
     //private
 
     private readonly int boardXSize = 7;      // 가로 블럭 칸 개수
     private readonly int boardYSize = 7;      // 세로 블럭 칸 개수
-    private bool isMatchingAnimationAct = false; // 액션 중에는 터치 불가능하게
+    private bool isMatchingAnimationAct = false; // 액션 중에는 터치 불가능하게... ui 전체 커버 이미지로 덮어도 되는데 이렇게 구현
     public bool IsMatchingAnimationAct => isMatchingAnimationAct;
 
     private Coroutine blockDropCoroutine = null; // 블럭 드랍 코루틴 
@@ -56,7 +54,6 @@ public class Board : MonoBehaviour
     private void Start()
     {
         Initialize();
-        canvasScaleFactor = transform.root.GetComponent<Canvas>().scaleFactor;
     }
 
     public void Initialize()
@@ -247,6 +244,8 @@ public class Board : MonoBehaviour
 
         blockSpawnCount++;
         blockList.Add(block);
+        if (block.blockType != BlockType.Normal) blockList.Add(block);
+
         return block;
     }
 
@@ -335,6 +334,11 @@ public class Board : MonoBehaviour
             return false;
 
         var block = nodeMap[nodePoint].block;
+
+        // 특수블럭인 경우 검사하지 않음
+        if (block.blockType != BlockType.Normal)
+            return false;
+
         Node node1 = null;
         Node node2 = null;
         BlockColor color = block.blockColor;
@@ -375,6 +379,7 @@ public class Board : MonoBehaviour
         // 전방향 체크했는데 없으면 해당 블럭은 매치 불가능
         if (isMatch)
         {
+            //@@@ 디버그용
             var s1 = string.Join(", ", matchNodePointList.Select(p => p.ToString()).ToArray());
             HLLogger.Log($"MatchCheck {nodePoint} : {isMatch} - {s1}");
         }
