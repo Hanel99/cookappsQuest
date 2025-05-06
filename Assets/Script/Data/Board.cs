@@ -65,20 +65,16 @@ public class Board : MonoBehaviour
         blockList.Clear();
 
         //1 우선 특수 블록을 먼저 스폰
-        int leftSpecialBlockCount = GameManager.instance.specialBlockCount;
+        int leftSpecialBlockCount = 1;
 
-        while (leftSpecialBlockCount > 0)
+        while (leftSpecialBlockCount <= GameManager.instance.SpecialBlockCount)
         {
             var point = GetRandomNodePoint();
 
             // 블럭 스폰
             SpawnBlock(BlockType.Special, BlockColor.Blue, point);
-            --leftSpecialBlockCount;
+            leftSpecialBlockCount++;
         }
-
-
-
-
 
         //2 그 외 빈 칸에 일반 블록을 스폰
         foreach (var node in nodeMap)
@@ -334,6 +330,8 @@ public class Board : MonoBehaviour
     void MatchCheckAllBlock()
     {
         // 모든 블럭이 3개 이상 연결되었는지를 체크
+        // 블럭 매치 체크 -> 매치가 있으면 블럭 삭제 -> 블록 드랍 체크 -> 블럭 매치 체크 ... 반복
+
         bool isMatch = false;
 
         foreach (var node in nodeMap)
@@ -352,7 +350,12 @@ public class Board : MonoBehaviour
             RemoveMatchBlocks();
         }
         else
+        {
+            // 순환 구조 종료. 다음 입력 대기
             isMatchingAnimationAct = false;
+            GameManager.instance.UpdateUI();
+
+        }
     }
 
     bool MatchCheck(List<Vector2Int> nodePoints)

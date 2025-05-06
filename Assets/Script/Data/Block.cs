@@ -240,6 +240,14 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         yield return new WaitForSeconds(moveDuration);
         onAnimation = false;
 
+        //게임 데이터 갱신
+        GameManager.instance.AddScore(blockType);
+        if (blockType == BlockType.Special)
+        {
+            // 특수 블럭 제거 
+            GameManager.instance.AddSpecialBlockCount(-1);
+        }
+
         node.block = null;
         Board.instance.AddBlockSpawnCount();
         ObjectPool.instance.Recycle(this);

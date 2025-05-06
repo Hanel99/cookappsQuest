@@ -10,10 +10,16 @@ public class GameManager : MonoBehaviour
     private GameState gameState = GameState.Ready;
     public GameState GameState => gameState;
 
-    public int specialBlockCount = 5; // 현재 스테이지 스페셜 블럭 개수
-    public int score = 0;
-    public int maxScore = 1000;
-    public int leftMoveCount = 40; // 남은 이동 횟수
+    [HideInInspector] public int normalBlockScore => 100;
+    [HideInInspector] public int specialBlockScore => 500;
+
+    //private
+    private int specialBlockCount = 5; // 현재 스테이지 스페셜 블럭 개수
+    public int SpecialBlockCount => specialBlockCount;
+    private int score = 0;
+    private int maxScore = 1000;
+    private int leftMoveCount = 40; // 남은 이동 횟수
+
 
 
 
@@ -27,7 +33,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        gameState = GameState.Ready;
+        Application.targetFrameRate = 60;
 
         specialBlockCount = 5;
         score = 0;
@@ -36,10 +42,9 @@ public class GameManager : MonoBehaviour
 
         // 그 외 스크립트에서 Start에서 실행해야 할 메소드들 시작
         Board.instance.Initialize();
+        UpdateUI();
+        ChangeGameState(GameState.Ready);
     }
-
-
-
 
 
 
@@ -54,4 +59,56 @@ public class GameManager : MonoBehaviour
 #endif
 
     }
+
+
+    public void ChangeGameState(GameState state)
+    {
+        gameState = state;
+    }
+
+    public void AddScore(BlockType type)
+    {
+        //스코어 상한선은 없음
+        if (type == BlockType.Normal)
+            score += normalBlockScore;
+        else if (type == BlockType.Special)
+            score += specialBlockScore;
+    }
+
+    public void AddSpecialBlockCount(int value)
+    {
+        //말은 add인데 깎는용으로 사용
+        specialBlockCount += value;
+        if (specialBlockCount < 0)
+            specialBlockCount = 0;
+    }
+
+    public void UpdateUI()
+    {
+        UIManager.instance.UpdateLeftSpecialBlockCount(specialBlockCount);
+        UIManager.instance.UpdateLeftMoveCount(leftMoveCount);
+        float barSize = (float)score / maxScore;
+        UIManager.instance.UpdateScore(score, barSize);
+
+        if (leftMoveCount <= 0)
+        {
+            GameOverProcess();
+        }
+    }
+
+
+
+    public void GameClearProcess()
+    {
+        //게임 클리어 처리
+        ChangeGameState(GameState.GameClear);
+    }
+
+    public void GameOverProcess()
+    {
+        //게임 오버 처리
+        ChangeGameState(GameState.GameOver);
+
+    }
+
 }

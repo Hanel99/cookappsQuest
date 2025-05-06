@@ -189,7 +189,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 15
+  m_Text: 0
 --- !u!222 &13758268
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -720,7 +720,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 100
+  m_Text: 0
 --- !u!222 &150471720
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -939,7 +939,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3dca62281cc5d7d49b8d7a9bfa8be6c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  specialBlockImage: {fileID: 0}
   leftSpecialBlockCount: {fileID: 150471719}
   leftMoveCount: {fileID: 13758267}
   scoreBar: {fileID: 1221056952}
@@ -3406,7 +3405,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1065462690}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.32
+  m_Size: 0
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3519,7 +3518,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 100
+  m_Text: 0
 --- !u!222 &1227252873
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3661,10 +3660,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04dec492f51811b4db0b2ed9c448f788, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  specialBlockCount: 0
-  score: 0
-  leftTime: 0
-  leftMoveCount: 0
 --- !u!1 &1294404790
 GameObject:
   m_ObjectHideFlags: 0

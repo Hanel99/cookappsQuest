@@ -24,12 +24,9 @@ public class UIManager : MonoBehaviour
         instance = this;
     }
 
-    public void InitUI()
+    public void UpdateLeftSpecialBlockCount(int count)
     {
-        leftSpecialBlockCount.text = GameManager.instance.specialBlockCount.ToString();
-        leftMoveCount.text = GameManager.instance.leftMoveCount.ToString();
-        scoreBar.size = 0;
-        score.text = GameManager.instance.score.ToString();
+        leftSpecialBlockCount.text = count.ToString();
     }
 
     public void UpdateLeftMoveCount(int count)
@@ -42,8 +39,5 @@ public class UIManager : MonoBehaviour
         scoreBar.size = barSize;
         score.text = value.ToString();
     }
-
-
-
 
 }
