@@ -90,7 +90,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 187170ac5f47f314db0429ea8bdd5809, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tempText: {fileID: 8765006869387859032}
   blockImage: {fileID: 18269743986792356}
   nodePoint: {x: 0, y: 0}
   blockType: 0
@@ -130,7 +129,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3680123549263704450
 RectTransform:
   m_ObjectHideFlags: 0
