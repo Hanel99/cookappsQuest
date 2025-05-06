@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -17,7 +18,7 @@ public class GameManager : MonoBehaviour
     private int specialBlockCount = 5; // 현재 스테이지 스페셜 블럭 개수
     public int SpecialBlockCount => specialBlockCount;
     private int score = 0;
-    private int maxScore = 1000;
+    private int maxScore = 4000;
     private int leftMoveCount = 40; // 남은 이동 횟수
 
 
@@ -37,7 +38,7 @@ public class GameManager : MonoBehaviour
 
         specialBlockCount = 5;
         score = 0;
-        maxScore = 1000;
+        maxScore = 4000;
         leftMoveCount = 40;
 
         // 그 외 스크립트에서 Start에서 실행해야 할 메소드들 시작
@@ -83,6 +84,13 @@ public class GameManager : MonoBehaviour
             specialBlockCount = 0;
     }
 
+    public void AddMoveCount(int value)
+    {
+        leftMoveCount += value;
+        if (leftMoveCount < 0)
+            leftMoveCount = 0;
+    }
+
     public void UpdateUI()
     {
         UIManager.instance.UpdateLeftSpecialBlockCount(specialBlockCount);
@@ -90,7 +98,12 @@ public class GameManager : MonoBehaviour
         float barSize = (float)score / maxScore;
         UIManager.instance.UpdateScore(score, barSize);
 
-        if (leftMoveCount <= 0)
+
+        if (specialBlockCount <= 0)
+        {
+            GameClearProcess();
+        }
+        else if (leftMoveCount <= 0)
         {
             GameOverProcess();
         }
@@ -102,13 +115,20 @@ public class GameManager : MonoBehaviour
     {
         //게임 클리어 처리
         ChangeGameState(GameState.GameClear);
+        UIManager.instance.ShowGameClearPopup(true);
     }
 
     public void GameOverProcess()
     {
         //게임 오버 처리
         ChangeGameState(GameState.GameOver);
+        UIManager.instance.ShowGameOverPopup(true);
+    }
 
+
+    public void RestartGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
 }

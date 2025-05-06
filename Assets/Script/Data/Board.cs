@@ -343,6 +343,7 @@ public class Board : MonoBehaviour
             }
         }
 
+        GameManager.instance.UpdateUI();
         if (isMatch)
         {
             var s1 = string.Join(", ", matchNodePointList.Select(p => p.ToString()).ToArray());
@@ -353,8 +354,6 @@ public class Board : MonoBehaviour
         {
             // 순환 구조 종료. 다음 입력 대기
             isMatchingAnimationAct = false;
-            GameManager.instance.UpdateUI();
-
         }
     }
 
@@ -518,6 +517,9 @@ public class Board : MonoBehaviour
 
         // 블럭 스왑 후 매치 체크
         List<Vector2Int> checkList = new List<Vector2Int>() { blockA.nodePoint, blockB.nodePoint };
+
+        GameManager.instance.AddMoveCount(-1);
+        GameManager.instance.UpdateUI();
 
         isMatchingAnimationAct = true;
         blockA.DoMoveAnimation(blockA.node.point);
