@@ -22,6 +22,7 @@ public class Node
     }
 
 
+    //@@@ 이 로직은 보드쪽에서 처리했어야 싶은데 너무 참조할게 많아서 노드에서 만듦
     public Vector2Int? FindMoveNodePoint()
     {
         // 바로 아래 노드가 비어있으면 아래로 우선 이동

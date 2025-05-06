@@ -9,7 +9,6 @@ public class GameManager : MonoBehaviour
 
     public static GameManager instance { get; private set; }
     private GameState gameState = GameState.Ready;
-    public GameState GameState => gameState;
 
     [HideInInspector] public int normalBlockScore => 100;
     [HideInInspector] public int specialBlockScore => 500;
@@ -56,6 +55,10 @@ public class GameManager : MonoBehaviour
         // if (Input.GetKeyDown(KeyCode.Space))
         // {
         //     Board.instance.AddBlockSpawnCount();
+        // }
+        // if (Input.GetKeyDown(KeyCode.F5))
+        // {
+        //     RestartGame();
         // }
 #endif
 

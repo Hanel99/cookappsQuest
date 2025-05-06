@@ -9,7 +9,7 @@ using UnityEngine.UI;
 public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
 
-    public Text tempText; //@@@ 삭제 필요. 디버그용 텍스트
+    // public Text tempText; //@@@ 삭제 필요. 디버그용 텍스트
 
 
     public Image blockImage;      // 블록 이미지
@@ -23,12 +23,11 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
     //private
     private SpriteAnimator spriteAnimator = null;
     private bool onAnimation = false;
-    public bool OnAnimation => onAnimation;
     private int hp = 0; // 팽이 블럭의 경우 2번 데미지를 받으면 파괴
-    public int HP => hp;
     private Coroutine moveAni = null;
     private Coroutine removeAni = null;
-    private float moveDuration = 0.1f; // 블럭 이동 속도
+    private float moveDuration = 0.09f; // 블럭 이동 속도
+    private float removeDuration = 0.15f; // 블럭 삭제 연출 속도
 
 
     public void Awake()
@@ -58,7 +57,7 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         transform.localScale = Vector3.one;
         blockImage.color = Color.white;
 
-        tempText.text = $"{nodePoint.x}, {nodePoint.y}" + ((blockType == BlockType.Special) ? $"\nHP {hp}" : "");
+        // tempText.text = $"{nodePoint.x}, {nodePoint.y}" + ((blockType == BlockType.Special) ? $"\nHP {hp}" : "");
     }
 
     public void ResetNode(Vector2Int nodePoint)
@@ -67,7 +66,16 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         node = Board.instance.GetNode(nodePoint);
         node.block = this;
 
-        tempText.text = $"{nodePoint.x}, {nodePoint.y}" + ((blockType == BlockType.Special) ? $"\nHP {hp}" : "");
+        // tempText.text = $"{nodePoint.x}, {nodePoint.y}" + ((blockType == BlockType.Special) ? $"\nHP {hp}" : "");
+    }
+
+    public void ResetBlockColor()
+    {
+        //초기 보드 셋팅 중 블럭 색상 변경 용
+        blockColor++;
+        if (blockColor > BlockColor.Yellow) blockColor = BlockColor.Blue; // 블럭 색상 순환
+
+        blockImage.sprite = ResourceManager.instance.GetBlockImage(blockColor);
     }
 
 
@@ -199,7 +207,7 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         targetNode.block = this;
         nodePoint = targetNode.point;
 
-        tempText.text = $"{nodePoint.x}, {nodePoint.y}" + ((blockType == BlockType.Special) ? $"\nHP {hp}" : "");
+        // tempText.text = $"{nodePoint.x}, {nodePoint.y}" + ((blockType == BlockType.Special) ? $"\nHP {hp}" : "");
     }
 
     #endregion
@@ -221,12 +229,14 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         {
             // 블럭 데미지 1인 상태
             spriteAnimator.PlayAnimation();
-            tempText.text = $"{nodePoint.x}, {nodePoint.y}" + $"\nHP {hp}";
+            // tempText.text = $"{nodePoint.x}, {nodePoint.y}" + $"\nHP {hp}";
         }
     }
 
     public void DoRemoveAnimation()
     {
+        if (onAnimation) return;
+
         if (removeAni != null) StopCoroutine(removeAni);
         removeAni = StartCoroutine(Co_RemoveBlockAnimation());
     }
@@ -234,11 +244,8 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
     private IEnumerator Co_RemoveBlockAnimation()
     {
         onAnimation = true;
-        transform.DOScale(1.5f, moveDuration).SetEase(Ease.Linear);
-        blockImage.DOFade(0, moveDuration).SetEase(Ease.Linear);
-
-        yield return new WaitForSeconds(moveDuration);
-        onAnimation = false;
+        transform.DOScale(1.5f, removeDuration).SetEase(Ease.Linear);
+        blockImage.DOFade(0, removeDuration).SetEase(Ease.Linear);
 
         //게임 데이터 갱신
         GameManager.instance.AddScore(blockType);
@@ -250,6 +257,9 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
 
         node.block = null;
         Board.instance.AddBlockSpawnCount();
+
+        yield return new WaitForSeconds(removeDuration);
+        onAnimation = false;
         ObjectPool.instance.Recycle(this);
     }
 
