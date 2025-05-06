@@ -8,6 +8,13 @@ public class GameManager : MonoBehaviour
 
     public static GameManager instance { get; private set; }
     private GameState gameState = GameState.Ready;
+    public GameState GameState => gameState;
+
+    public int specialBlockCount = 5; // 현재 스테이지 스페셜 블럭 개수
+    public int score = 0;
+    public int maxScore = 1000;
+    public int leftMoveCount = 40; // 남은 이동 횟수
+
 
 
 
@@ -22,6 +29,13 @@ public class GameManager : MonoBehaviour
     {
         gameState = GameState.Ready;
 
+        specialBlockCount = 5;
+        score = 0;
+        maxScore = 1000;
+        leftMoveCount = 40;
+
+        // 그 외 스크립트에서 Start에서 실행해야 할 메소드들 시작
+        Board.instance.Initialize();
     }
 
 
@@ -38,9 +52,6 @@ public class GameManager : MonoBehaviour
         //     Board.instance.AddBlockSpawnCount();
         // }
 #endif
-
-
-
 
     }
 }

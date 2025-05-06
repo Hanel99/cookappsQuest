@@ -73,4 +73,30 @@ public class Node
 
         return null;
     }
+
+
+    public bool IsExistLinkedNode(Vector2Int nodePoint)
+    {
+        foreach (var linkedPoint in linkedNodePoint)
+        {
+            if (linkedPoint.HasValue && linkedPoint.Value == nodePoint)
+                return true;
+        }
+        return false;
+    }
+
+    public bool IsExistLinkedNode(HashSet<Vector2Int> nodePoints)
+    {
+        foreach (var linkedPoint in linkedNodePoint)
+        {
+            foreach (var nodePoint in nodePoints)
+            {
+                if (linkedPoint.HasValue && linkedPoint.Value == nodePoint)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+
 }

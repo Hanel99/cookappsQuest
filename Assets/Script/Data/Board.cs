@@ -51,13 +51,10 @@ public class Board : MonoBehaviour
         instance = this;
     }
 
-    private void Start()
-    {
-        Initialize();
-    }
-
     public void Initialize()
     {
+        // 일반적인 Start에 해당. GameManager에서 일괄 처리
+
         SetNodeMap();
         InitBoardBlock();
     }
@@ -67,17 +64,51 @@ public class Board : MonoBehaviour
         // 초기 블럭들 배치
         blockList.Clear();
 
-        //@@@ 3개 이상 연결된 블럭이 있으면 안됨.
+        //1 우선 특수 블록을 먼저 스폰
+        int leftSpecialBlockCount = GameManager.instance.specialBlockCount;
 
+        while (leftSpecialBlockCount > 0)
+        {
+            var point = GetRandomNodePoint();
+
+            // 블럭 스폰
+            SpawnBlock(BlockType.Special, BlockColor.Blue, point);
+            --leftSpecialBlockCount;
+        }
+
+
+
+
+
+        //2 그 외 빈 칸에 일반 블록을 스폰
         foreach (var node in nodeMap)
         {
-            if (node.Value.isOn)
+            if (node.Value.isOn && node.Value.block == null)
             {
-                BlockColor color = (BlockColor)UnityEngine.Random.Range(0, (int)BlockColor.Count);
+                // 블럭이 없는 노드에 대해서만 블럭을 스폰함.
+                // 블럭 색상은 랜덤으로 지정... 보정이 필요할까?
 
+                BlockColor color = (BlockColor)UnityEngine.Random.Range(0, (int)BlockColor.Count);
                 SpawnBlock(BlockType.Normal, color, node.Key);
             }
         }
+
+        //3 전체 보드에 매치가 가능한지 확인. 가능하다면 매치가 불가능하도록 블럭을 교체
+
+    }
+
+    Vector2Int GetRandomNodePoint()
+    {
+        int x = UnityEngine.Random.Range(0, boardXSize - 1);
+        int y = UnityEngine.Random.Range(0, boardYSize - 1);
+        Vector2Int point = new Vector2Int(x, y);
+        var node = nodeMap[point];
+
+        // 사용 가능한 노드, 빈 노드이면 사용
+        if (node.isOn && node.block == null)
+            return point;
+        else
+            return GetRandomNodePoint();
     }
 
 
@@ -244,7 +275,7 @@ public class Board : MonoBehaviour
 
         blockSpawnCount++;
         blockList.Add(block);
-        if (block.blockType != BlockType.Normal) blockList.Add(block);
+        if (block.blockType != BlockType.Normal) specialBlockList.Add(block);
 
         return block;
     }
@@ -268,9 +299,20 @@ public class Board : MonoBehaviour
                 if (moveCheckStartPoint.y < point.y)
                     moveCheckStartPoint = new Vector2Int(0, point.y);
 
-                blockList.Remove(block);
+                if (block.blockType == BlockType.Special)
+                    specialBlockList.Remove(block);
+                else
+                    blockList.Remove(block);
+
                 block.RemoveBlock();
             }
+        }
+
+        foreach (var specialBlock in specialBlockList)
+        {
+            // 특수 블럭 데미지 처리
+            if (specialBlock.node.IsExistLinkedNode(matchNodePointList))
+                specialBlock.OnDamage();
         }
 
         // 블럭 드랍 체크

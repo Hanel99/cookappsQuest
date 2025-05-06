@@ -84,16 +84,18 @@ public class Block : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        isDragging = true;
         if (Board.instance.IsMatchingAnimationAct) return;
+        if (blockType == BlockType.Special) return;
 
+        isDragging = true;
         startPosition = eventData.pressPosition;
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (isDragging == false) return;
         if (Board.instance.IsMatchingAnimationAct) return;
+        if (blockType == BlockType.Special) return;
+        if (isDragging == false) return;
 
         dragPosition = eventData.position;
         dragVector = dragPosition - startPosition;
